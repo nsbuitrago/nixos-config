@@ -10,19 +10,23 @@
 # N         N NB B B B B B
 
 {
-  description = "NSBuitrago's NixOS Configuration";
+  description = "NSBuitrago's NixOS/Darwin Configuration";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    
+    nix-darwin.url = "github:LnL7/nix-darwin";
+    nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = {
     self,
     nixpkgs,
     home-manager,
+    nix-darwin,
     ...
   } @ inputs: let
     inherit (self) outputs;
@@ -33,7 +37,7 @@
     nixosConfigurations = {
       odinson = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs nsbUser chillweiUser;};
-        modules = [./hosts/odinson/configuration.nix];
+        modules = [./linux/odinson/configuration.nix];
       };
     };
 
@@ -41,7 +45,6 @@
       "${nsbUser}@odinson" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
         extraSpecialArgs = {inherit inputs outputs nsbUser;};
-        # > main home-manager configuration file <
         modules = [./users/nsbuitrago/home.nix];
       };
 
@@ -51,5 +54,13 @@
         modules = [./users/chillwei/home.nix];
       };
     };
+
+    darwinConfigurations = {
+      "${nsbUser}@hodgkin" = nix-darwin.lib.darwinSystem {
+        specialArgs = {inherit inputs outputs nsbUser;};
+        modules = [./darwin/hodgkin.nix];
+      };
+      }
+    }
   };
 }
